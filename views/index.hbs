@@ -1,0 +1,71 @@
+<div>
+    {{#if search}}
+    {{#if traces}}
+    <div class="alert alert-success mt-3 mx-3" role="alert">
+        Found
+        <span class="font-weight-bold">
+            {{search}}
+        </span>
+        {{#each traces}}
+        {{../traces.length}}
+        {{/each}}
+        results.
+    </div>
+    {{else}}
+    <div class="alert alert-danger mt-3 mx-3" role="alert">
+        <span class="font-weight-bold">
+            {{search}}
+        </span>
+        cannot be found.
+    </div>
+    {{/if}}
+    {{/if}}
+
+    <table id="tracesTable" class="table table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Package</th>
+                <th scope="col">Built By</th>
+                <th scope="col">Date</th>
+                <th scope="col">Graph</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{#each traces}}
+            <tr>
+                <td>{{this.id}}</td>
+                <td>{{this.package}}</td>
+                <td>{{this.account}}</td>
+                <td data-order={{this.timestamp}}>{{date this.timestamp}}</td>
+                <td>
+                    <button type="button" onclick="window.location.href='/build/' + {{this.id}}"
+                        class="btn btn-outline-primary btn-sm m-0">Graph</button>
+                </td>
+            </tr>
+            {{/each}}
+        </tbody>
+    </table>
+</div>
+<style>
+    #tracesTable {
+        margin-top: 0px !important;
+    }
+
+    div.dataTables_wrapper div.dataTables_paginate ul.pagination {
+        justify-content: flex-start
+    }
+</style>
+<script>
+    $(document).ready(function () {
+        $('#tracesTable').DataTable({
+            "bFilter": false,
+            "bInfo": false,
+            "bLengthChange": false,
+            "columnDefs": [{
+                "targets": 4, // Disable sorting of last column
+                "orderable": false
+            }]
+        });
+    });
+</script>

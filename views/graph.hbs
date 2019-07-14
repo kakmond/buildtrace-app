@@ -1,0 +1,222 @@
+<link rel="stylesheet" href="/stylesheets/index.css">
+
+<div class="container">
+    <blockquote class="blockquote pt-3">
+        <div>
+            <span class="h1" id="pkgName"></span>
+            <span class="lead pl-2" id="date"></span>
+        </div>
+        <footer class="blockquote-footer">Built by <cite id="author" title="Source Title"></cite></footer>
+    </blockquote>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalCenter" tabindex="-1" role="dialog" aria-labelledby="modalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCenterTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="modelCenterBody">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="graph"></div>
+
+<script type="text/javascript">
+
+
+    // create an empty array with nodes
+    var nodes = new vis.DataSet();
+
+    // create an empty array with edges
+    var edges = new vis.DataSet();
+
+    var container = document.getElementById('graph');
+    var data = {
+        nodes: nodes,
+        edges: edges,
+    };
+    var option = {
+        nodes: {
+            font: {
+                size: 23
+            },
+            borderWidth: 2,
+            shadow: true
+        },
+        edges: {
+            width: 2,
+            shadow: false,
+        },
+        layout: {
+            hierarchical: true
+        },
+        interaction: {
+            hover: true
+        },
+
+    }
+    var graph = {{{ graph }}}
+    var result = graph.result
+    $('#pkgName').html(graph.package);
+    $('#author').html(graph.account);
+    $('#date').html(timestampToDate(graph.timestamp));
+    var groupNumber = 0
+    result.forEach(obj => {
+        if (!nodes.get(obj.cmd))
+            nodes.add({
+                id: obj.cmd, label: obj.cmd, shape: 'box',
+                chosen: { label: true, node: true },
+                group: groupNumber,
+                margin: 12,
+                isCmd: true,
+                input: obj.input,
+                output: obj.output,
+                title: 'input: ' + obj.input.length + ' files, output: ' + obj.output.length + ' files'
+            })
+        groupNumber++
+        obj.input.forEach(file => {
+            if (!nodes.get(file.hash))
+                nodes.add({
+                    id: file.hash,
+                    label: file.name,
+                    shape: 'eclipse',
+                    chosen: { label: true, node: true },
+                    group: groupNumber,
+                    margin: 12,
+                    title: file.hash
+                })
+            edges.add({
+                from: file.hash,
+                to: obj.cmd,
+                arrows: 'to',
+                chosen: true,
+            })
+        })
+        groupNumber++
+        obj.output.forEach(file => {
+            if (!nodes.get(file.hash))
+                nodes.add({
+                    id: file.hash,
+                    label: file.name,
+                    shape: 'eclipse',
+                    chosen: { label: true, node: true },
+                    group: groupNumber,
+                    margin: 12,
+                    title: file.hash
+                })
+            edges.add({
+                from: obj.cmd,
+                to: file.hash,
+                arrows: 'to',
+                chosen: true,
+            })
+        })
+        groupNumber++
+    });
+
+    var network = new vis.Network(container, data, option);
+    network.on("doubleClick", function (selection) {
+        var selectedNodeIds = selection.nodes; // array of selected node's ids
+        if (selectedNodeIds)
+            showModal(selectedNodeIds[0])
+    });
+
+
+    function timestampToDate(timestamp) {
+        var date = new Date(timestamp * 1000);
+        var formattedDate = ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear() + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
+        return formattedDate
+    }
+
+    function showModal(nodeName) {
+        var selectedNode = nodes.get(nodeName); // retrive node objects from dataSet object
+        if (nodeName && selectedNode) { // if node exists
+            var node = selectedNode
+            var isCmd = node.isCmd;
+            var title = node.title;
+            var name = node.label;
+            var descriptionRender = ""
+            if (isCmd) {
+                descriptionRender = `
+            <div class="accordion">
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne"
+                                aria-expanded="true" aria-controls="collapseOne">
+                                <span class="lead">Input files (${node.input.length})</span>
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" >
+                        <div class="card-body">
+                            ${node.input.map(file => {
+                    return `<ul class="list-group list-group-flush">
+                                <li class="list-group-item"> 
+                                    <a href="#" onclick="showModal('${file.hash}')" class="text-reset">${file.name}</a> 
+                                    <footer><small class="text-muted">${file.hash}</small></footer>
+                                </li>
+                            </ul>`;
+                }).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo"
+                                aria-expanded="false" aria-controls="collapseTwo">
+                                <span class="lead">Output files (${node.output.length})</span>
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
+                        <div class="card-body">
+                            ${node.output.map(file => {
+                    return `<ul class="list-group list-group-flush">
+                                <li class="list-group-item"> 
+                                    <a href="#" onclick="showModal('${file.hash}')" class="text-reset">${file.name}</a> 
+                                    <footer><small class="text-muted">${file.hash}</small></footer>
+                                </li>
+                            </ul>`;
+                }).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+           `
+            }
+            else
+                descriptionRender = `
+                <ul class="list-group list-group-flush">
+                      <li class="list-group-item">
+                          <div class="d-flex justify-content-between">
+                          <span class="lead">Full path </span> <p class="text-monospace">&nbsp&nbsp&nbsp${node.title}&nbsp&nbsp</p>
+                          </div>
+                          
+                      </li>
+                      <li class="list-group-item">
+                          <div class="d-flex justify-content-between">
+                          <span class="lead">Hash</span> <p class="text-monospace">&nbsp&nbsp&nbsp${node.title}&nbsp&nbsp</p>
+                          </div>
+                      </li>
+                </ul>`
+            $('#modalCenterTitle').html(name);
+            $('#modelCenterBody').html(descriptionRender);
+            $('#modalCenter').modal('show')
+        }
+    }
+</script>
