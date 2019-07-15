@@ -16,7 +16,7 @@ app.engine('hbs', hbs({
   defaultLayout: 'layout',
   layoutsDir: __dirname + '/views/',
   partialsDir: __dirname + '/views/partials/',
-  helpers: require("./public/helpers/date.js"),
+  helpers: require("./public/helpers/helpers.js"),
 }));
 app.set('view engine', 'hbs');
 
