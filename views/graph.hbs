@@ -16,16 +16,16 @@
         <div class="list-group" id="list-tab" role="tablist">
             {{#each graph.result}}
             <a class="list-group-item list-group-item-action {{#ifCond @index '==' 0}}active{{/ifCond}}"
-                id="list-{{this.cmd}}-list" data-toggle="list" href="#list-{{this.cmd}}" role="tab"
-                aria-controls="{{this.cmd}}">{{this.cmd}}</a>
+                id="list-{{@index}}-list" data-toggle="list" href="#list-{{@index}}" role="tab"
+                aria-controls="{{@index}}">{{this.cmd}}</a>
             {{/each}}
         </div>
     </div>
     <div class="col-8">
         <div class="tab-content" id="nav-tabContent">
             {{#each graph.result}}
-            <div class="tab-pane fade show {{#ifCond @index '==' 0}}active{{/ifCond}}" id="list-{{this.cmd}}" role="tabpanel"
-                aria-labelledby="list-{{this.cmd}}-list">
+            <div class="tab-pane fade show {{#ifCond @index '==' 0}}active{{/ifCond}}" id="list-{{@index}}" role="tabpanel"
+                aria-labelledby="list-{{@index}}-list">
                 <div class="card">
                     <div class="card-header" id="headingOne">
                         <h2 class="mb-0">
