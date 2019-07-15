@@ -9,7 +9,7 @@ web3 = new web3(new web3.providers.HttpProvider(endpoint));
 web3.eth.defaultAccount = web3.eth.accounts[0] // set account as sender
 
 /* TraceStorage smart contract configuration */
-var contract_Address = '0xCdCC578919e59A6F8eFFAb9E8a39389a36Ef763D'
+var contract_Address = '0x17188885a1aCf7305F1e58EF5F196d85dC736112'
 var contract_ABI = "abi/TraceStorage.json";
 var json = JSON.parse(fs.readFileSync(contract_ABI));
 var abi = json.abi
@@ -42,7 +42,9 @@ router.get('/build/:id', function (req, res, next) {
     if (hex) { // if trace data exists
       var ascii = web3.utils.hexToAscii(hex)
       var decompressedJSON = bzip(ascii).toString()
-      res.render('graph', { title: 'Express', graph: decompressedJSON });
+      var object = JSON.parse(decompressedJSON)
+      console.log(object)
+      res.render('graph', { title: 'Express', graph: object });
     }
     else
       res.render('error', { message: 'buildtrace ID: ' + req.params.id + ' cannot be found.' });
