@@ -3,11 +3,78 @@
 <div class="container">
     <blockquote class="blockquote pt-3">
         <div>
-            <span class="h1" id="pkgName"></span>
-            <span class="lead pl-2" id="date"></span>
+            <span class="h1" id="pkgName">{{graph.package}}</span>
+            <span class="lead pl-2" id="date">{{date graph.timestamp}}</span>
         </div>
-        <footer class="blockquote-footer">Built by <cite id="author" title="Source Title"></cite></footer>
+        <footer class="blockquote-footer">Built by <cite id="author" title="Source Title">{{graph.account}}</cite>
+        </footer>
     </blockquote>
+</div>
+
+<div class="px-5 py-3 row">
+    <div class="col-4">
+        <div class="list-group" id="list-tab" role="tablist">
+            {{#each graph.result}}
+            <a class="list-group-item list-group-item-action {{#ifCond @index '==' 0}}active{{/ifCond}}"
+                id="list-{{this.cmd}}-list" data-toggle="list" href="#list-{{this.cmd}}" role="tab"
+                aria-controls="{{this.cmd}}">{{this.cmd}}</a>
+            {{/each}}
+        </div>
+    </div>
+    <div class="col-8">
+        <div class="tab-content" id="nav-tabContent">
+            {{#each graph.result}}
+            <div class="tab-pane fade show {{#ifCond @index '==' 0}}active{{/ifCond}}" id="list-{{this.cmd}}" role="tabpanel"
+                aria-labelledby="list-{{this.cmd}}-list">
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne"
+                                aria-expanded="true" aria-controls="collapseOne">
+                                <span class="lead">Input files ({{this.input.length}})
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="collapseOne" class="collapse" aria-labelledby="headingOne">
+                        <div class="card-body">
+                            {{#each this.input}}
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <a href="#" class="text-reset">{{this.name}}</a>
+                                    <footer><small class="text-muted">{{this.hash}}</small></footer>
+                                </li>
+                            </ul>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseTwo"
+                                aria-expanded="true" aria-controls="collapseTwo">
+                                <span class="lead">Output files ({{this.output.length}})
+                                </span>
+                            </button>
+                        </h2>
+                    </div>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo">
+                        <div class="card-body">
+                            {{#each this.output}}
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <a href="#" class="text-reset">{{this.name}}</a>
+                                    <footer><small class="text-muted">{{this.hash}}</small></footer>
+                                </li>
+                            </ul>
+                            {{/each}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
 </div>
 
 <!-- Modal -->
@@ -31,114 +98,8 @@
     </div>
 </div>
 
-<div id="graph"></div>
 
 <script type="text/javascript">
-
-
-    // create an empty array with nodes
-    var nodes = new vis.DataSet();
-
-    // create an empty array with edges
-    var edges = new vis.DataSet();
-
-    var container = document.getElementById('graph');
-    var data = {
-        nodes: nodes,
-        edges: edges,
-    };
-    var option = {
-        nodes: {
-            font: {
-                size: 23
-            },
-            borderWidth: 2,
-            shadow: true
-        },
-        edges: {
-            width: 2,
-            shadow: false,
-        },
-        layout: {
-            hierarchical: true
-        },
-        interaction: {
-            hover: true
-        },
-
-    }
-    var graph = {{{ graph }}}
-    var result = graph.result
-    $('#pkgName').html(graph.package);
-    $('#author').html(graph.account);
-    $('#date').html(timestampToDate(graph.timestamp));
-    var groupNumber = 0
-    result.forEach(obj => {
-        if (!nodes.get(obj.cmd))
-            nodes.add({
-                id: obj.cmd, label: obj.cmd, shape: 'box',
-                chosen: { label: true, node: true },
-                group: groupNumber,
-                margin: 12,
-                isCmd: true,
-                input: obj.input,
-                output: obj.output,
-                title: 'input: ' + obj.input.length + ' files, output: ' + obj.output.length + ' files'
-            })
-        groupNumber++
-        obj.input.forEach(file => {
-            if (!nodes.get(file.hash))
-                nodes.add({
-                    id: file.hash,
-                    label: file.name,
-                    shape: 'eclipse',
-                    chosen: { label: true, node: true },
-                    group: groupNumber,
-                    margin: 12,
-                    title: file.hash
-                })
-            edges.add({
-                from: file.hash,
-                to: obj.cmd,
-                arrows: 'to',
-                chosen: true,
-            })
-        })
-        groupNumber++
-        obj.output.forEach(file => {
-            if (!nodes.get(file.hash))
-                nodes.add({
-                    id: file.hash,
-                    label: file.name,
-                    shape: 'eclipse',
-                    chosen: { label: true, node: true },
-                    group: groupNumber,
-                    margin: 12,
-                    title: file.hash
-                })
-            edges.add({
-                from: obj.cmd,
-                to: file.hash,
-                arrows: 'to',
-                chosen: true,
-            })
-        })
-        groupNumber++
-    });
-
-    var network = new vis.Network(container, data, option);
-    network.on("doubleClick", function (selection) {
-        var selectedNodeIds = selection.nodes; // array of selected node's ids
-        if (selectedNodeIds)
-            showModal(selectedNodeIds[0])
-    });
-
-
-    function timestampToDate(timestamp) {
-        var date = new Date(timestamp * 1000);
-        var formattedDate = ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2) + '/' + date.getFullYear() + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
-        return formattedDate
-    }
 
     function showModal(nodeName) {
         var selectedNode = nodes.get(nodeName); // retrive node objects from dataSet object
