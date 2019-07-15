@@ -28,7 +28,7 @@
                 <th scope="col">Package</th>
                 <th scope="col">Built By</th>
                 <th scope="col">Date</th>
-                <th scope="col">Graph</th>
+                <th scope="col">Detail</th>
             </tr>
         </thead>
         <tbody>
@@ -40,7 +40,7 @@
                 <td data-order={{this.timestamp}}>{{date this.timestamp}}</td>
                 <td>
                     <button type="button" onclick="window.location.href='/build/' + {{this.id}}"
-                        class="btn btn-outline-primary btn-sm m-0">Graph</button>
+                        class="btn btn-outline-primary btn-sm m-0">Detail</button>
                 </td>
             </tr>
             {{/each}}
